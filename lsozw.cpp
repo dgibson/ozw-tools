@@ -231,8 +231,6 @@ int main(int argc, char *argv[])
 	Options::Get()->AddOptionInt("SaveLogLevel", LogLevel_Detail);
 	Options::Get()->AddOptionInt("QueueLogLevel", LogLevel_Debug);
 	Options::Get()->AddOptionInt("DumpTrigger", LogLevel_Error);
-	Options::Get()->AddOptionInt("PollInterval", 500);
-	Options::Get()->AddOptionBool("IntervalBetweenPolls", true);
 	Options::Get()->AddOptionBool("ValidateValueChanges", true);
 	Options::Get()->AddOptionBool("ConsoleOutput", false);
 	Options::Get()->Lock();
@@ -271,44 +269,6 @@ int main(int argc, char *argv[])
 	// writing the configuration file.  (Maybe write again after sleeping nodes have
 	// been queried as well.)
 	if (!g_initFailed) {
-		// The section below demonstrates setting up polling for a variable.  In this simple
-		// example, it has been hardwired to poll COMMAND_CLASS_BASIC on the each node that 
-		// supports this setting.
-		pthread_mutex_lock(&g_criticalSection);
-		for (list<NodeInfo *>::iterator it = g_nodes.begin();
-		     it != g_nodes.end(); ++it) {
-			NodeInfo *nodeInfo = *it;
-
-			// skip the controller (most likely node 1)
-			if (nodeInfo->m_nodeId == 1)
-				continue;
-
-			for (list < ValueID >::iterator it2 =
-			     nodeInfo->m_values.begin();
-			     it2 != nodeInfo->m_values.end(); ++it2) {
-				ValueID v = *it2;
-				if (v.GetCommandClassId() == 0x20) {
-//                                      Manager::Get()->EnablePoll( v, 2 );             // enables polling with "intensity" of 2, though this is irrelevant with only one value polled
-					break;
-				}
-			}
-		}
-		pthread_mutex_unlock(&g_criticalSection);
-
-		// If we want to access our NodeInfo list, that has been built from all the
-		// notification callbacks we received from the library, we have to do so
-		// from inside a Critical Section.  This is because the callbacks occur on other 
-		// threads, and we cannot risk the list being changed while we are using it.  
-		// We must hold the critical section for as short a time as possible, to avoid
-		// stalling the OpenZWave drivers.
-		// At this point, the program just waits for 3 minutes (to demonstrate polling),
-		// then exits
-		for (int i = 0; i < 60 * 3; i++) {
-			pthread_mutex_lock(&g_criticalSection);
-			// but NodeInfo list and similar data should be inside critical section
-			pthread_mutex_unlock(&g_criticalSection);
-			sleep(1);
-		}
 	}
 	// program exit (clean up)
 	if (strcasecmp(port.c_str(), "usb") == 0) {
