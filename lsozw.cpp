@@ -223,10 +223,6 @@ int main(int argc, char *argv[])
 
 	pthread_mutex_lock(&initMutex);
 
-
-	printf("Starting MinOZW with OpenZWave Version %s\n",
-	       Manager::getVersionAsString().c_str());
-
 	// Create the OpenZWave Manager.
 	// The first argument is the path to the config files (where the manufacturer_specific.xml file is located
 	// The second argument is the path for saved Z-Wave network state and the log file.  If you leave it NULL 
@@ -238,6 +234,7 @@ int main(int argc, char *argv[])
 	Options::Get()->AddOptionInt("PollInterval", 500);
 	Options::Get()->AddOptionBool("IntervalBetweenPolls", true);
 	Options::Get()->AddOptionBool("ValidateValueChanges", true);
+	Options::Get()->AddOptionBool("ConsoleOutput", false);
 	Options::Get()->Lock();
 
 	Manager::Create();
@@ -312,19 +309,6 @@ int main(int argc, char *argv[])
 			pthread_mutex_unlock(&g_criticalSection);
 			sleep(1);
 		}
-
-		Driver::DriverData data;
-		Manager::Get()->GetDriverStatistics(g_homeId, &data);
-		printf
-		    ("SOF: %d ACK Waiting: %d Read Aborts: %d Bad Checksums: %d\n",
-		     data.m_SOFCnt, data.m_ACKWaiting, data.m_readAborts,
-		     data.m_badChecksum);
-		printf
-		    ("Reads: %d Writes: %d CAN: %d NAK: %d ACK: %d Out of Frame: %d\n",
-		     data.m_readCnt, data.m_writeCnt, data.m_CANCnt,
-		     data.m_NAKCnt, data.m_ACKCnt, data.m_OOFCnt);
-		printf("Dropped: %d Retries: %d\n", data.m_dropped,
-		       data.m_retries);
 	}
 	// program exit (clean up)
 	if (strcasecmp(port.c_str(), "usb") == 0) {
