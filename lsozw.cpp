@@ -58,10 +58,10 @@ static pthread_mutex_t initMutex = PTHREAD_MUTEX_INITIALIZER;
 // <GetNodeInfo>
 // Return the NodeInfo object associated with this notification
 //-----------------------------------------------------------------------------
-NodeInfo *GetNodeInfo(Notification const *_notification)
+NodeInfo *GetNodeInfo(Notification const *n)
 {
-	uint32 const homeId = _notification->GetHomeId();
-	uint8 const nodeId = _notification->GetNodeId();
+	uint32 const homeId = n->GetHomeId();
+	uint8 const nodeId = n->GetNodeId();
 	for (list<NodeInfo *>::iterator it = g_nodes.begin();
 	     it != g_nodes.end(); ++it) {
 		NodeInfo *nodeInfo = *it;
@@ -78,29 +78,29 @@ NodeInfo *GetNodeInfo(Notification const *_notification)
 // <OnNotification>
 // Callback that is triggered when a value, group or node changes
 //-----------------------------------------------------------------------------
-void OnNotification(Notification const *_notification, void *_context)
+void OnNotification(Notification const *n, void *ctx)
 {
 	// Must do this inside a critical section to avoid conflicts with the main thread
 	pthread_mutex_lock(&g_criticalSection);
 
-	switch (_notification->GetType()) {
+	switch (n->GetType()) {
 	case Notification::Type_ValueAdded:
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
+		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
 			// Add the new value to our list
 			nodeInfo->m_values.
-				push_back(_notification->GetValueID());
+				push_back(n->GetValueID());
 		}
 		break;
 
 	case Notification::Type_ValueRemoved:
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
+		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
 			// Remove the value from out list
 			for (list<ValueID>::iterator it
 				     = nodeInfo->m_values.begin();
 			     it != nodeInfo->m_values.end();
 			     ++it) {
 				if ((*it) ==
-				    _notification->GetValueID()) {
+				    n->GetValueID()) {
 					nodeInfo->m_values.
 						erase(it);
 					break;
@@ -111,14 +111,14 @@ void OnNotification(Notification const *_notification, void *_context)
 
 	case Notification::Type_ValueChanged:
 		// One of the node values has changed
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
+		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
 			nodeInfo = nodeInfo;	// placeholder for real action
 		}
 		break;
 
 	case Notification::Type_Group:
 		// One of the node's association groups has changed
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
+		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
 			nodeInfo = nodeInfo;	// placeholder for real action
 		}
 		break;
@@ -127,8 +127,8 @@ void OnNotification(Notification const *_notification, void *_context)
 		{
 			// Add the new node to our list
 			NodeInfo *nodeInfo = new NodeInfo();
-			nodeInfo->m_homeId = _notification->GetHomeId();
-			nodeInfo->m_nodeId = _notification->GetNodeId();
+			nodeInfo->m_homeId = n->GetHomeId();
+			nodeInfo->m_nodeId = n->GetNodeId();
 			g_nodes.push_back(nodeInfo);
 			break;
 		}
@@ -136,8 +136,8 @@ void OnNotification(Notification const *_notification, void *_context)
 	case Notification::Type_NodeRemoved:
 		{
 			// Remove the node from our list
-			uint32 const homeId = _notification->GetHomeId();
-			uint8 const nodeId = _notification->GetNodeId();
+			uint32 const homeId = n->GetHomeId();
+			uint8 const nodeId = n->GetNodeId();
 			for (list<NodeInfo *>::iterator it =
 			     g_nodes.begin(); it != g_nodes.end(); ++it) {
 				NodeInfo *nodeInfo = *it;
@@ -154,25 +154,19 @@ void OnNotification(Notification const *_notification, void *_context)
 	case Notification::Type_NodeEvent:
 		// We have received an event from the node, caused by a
 		// basic_set or hail message.
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
+		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
 			nodeInfo = nodeInfo;	// placeholder for real action
 		}
 		break;
 
 	case Notification::Type_PollingDisabled:
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
-			nodeInfo->m_polled = false;
-		}
 		break;
 
 	case Notification::Type_PollingEnabled:
-		if (NodeInfo *nodeInfo = GetNodeInfo(_notification)) {
-			nodeInfo->m_polled = true;
-		}
 		break;
 
 	case Notification::Type_DriverReady:
-		g_homeId = _notification->GetHomeId();
+		g_homeId = n->GetHomeId();
 		break;
 
 	case Notification::Type_DriverFailed:
