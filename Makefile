@@ -1,6 +1,6 @@
 TARGETS = lsozw
 
-CXXFLAGS = -Wall -g
+CXXFLAGS = -Wall -g -Wno-unknown-pragmas
 CPPFLAGS = -I/usr/include/openzwave
 LDLIBS = -lpthread -lopenzwave
 
