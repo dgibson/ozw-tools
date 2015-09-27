@@ -192,6 +192,29 @@ void OnNotification(Notification const *n, void *ctx)
 	pthread_mutex_unlock(&g_criticalSection);
 }
 
+string zwave_port = OZW_DEFAULT_DEV;
+
+void usage(void)
+{
+	fprintf(stderr, "lsozw [-d device]\n");
+	exit(1);
+}
+
+void parse_options(int argc, char *argv[])
+{
+	int opt;
+
+	while ((opt = getopt(argc, argv, "p:")) != -1) {
+		switch (opt) {
+		case 'p':
+			zwave_port = optarg;
+			break;
+		default:
+			usage();
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // <main>
 // Create the driver and then wait
@@ -199,6 +222,8 @@ void OnNotification(Notification const *n, void *ctx)
 int main(int argc, char *argv[])
 {
 	pthread_mutexattr_t mutexattr;
+
+	parse_options(argc, argv);
 
 	pthread_mutexattr_init(&mutexattr);
 	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
@@ -229,17 +254,11 @@ int main(int argc, char *argv[])
 
 	// Add a Z-Wave Driver
 	// Modify this line to set the correct serial port for your PC interface.
-
-	string port = OZW_DEFAULT_DEV;
-
-	if (argc > 1) {
-		port = argv[1];
-	}
-	if (strcasecmp(port.c_str(), "usb") == 0) {
+	if (strcasecmp(zwave_port.c_str(), "usb") == 0) {
 		Manager::Get()->AddDriver("HID Controller",
 					  Driver::ControllerInterface_Hid);
 	} else {
-		Manager::Get()->AddDriver(port);
+		Manager::Get()->AddDriver(zwave_port);
 	}
 
 	// Now we just wait for either the AwakeNodesQueried or AllNodesQueried notification,
@@ -257,10 +276,10 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	// program exit (clean up)
-	if (strcasecmp(port.c_str(), "usb") == 0) {
+	if (strcasecmp(zwave_port.c_str(), "usb") == 0) {
 		Manager::Get()->RemoveDriver("HID Controller");
 	} else {
-		Manager::Get()->RemoveDriver(port);
+		Manager::Get()->RemoveDriver(zwave_port);
 	}
 	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 	Manager::Destroy();
