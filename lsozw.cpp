@@ -46,7 +46,6 @@ static bool g_initFailed = false;
 typedef struct {
 	uint32 m_homeId;
 	uint8 m_nodeId;
-	bool m_polled;
 	list<ValueID> m_values;
 } NodeInfo;
 
@@ -130,7 +129,6 @@ void OnNotification(Notification const *_notification, void *_context)
 			NodeInfo *nodeInfo = new NodeInfo();
 			nodeInfo->m_homeId = _notification->GetHomeId();
 			nodeInfo->m_nodeId = _notification->GetNodeId();
-			nodeInfo->m_polled = false;
 			g_nodes.push_back(nodeInfo);
 			break;
 		}
