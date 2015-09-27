@@ -40,6 +40,10 @@
 
 using namespace OpenZWave;
 
+// Global configuration
+static string zwave_port = OZW_DEFAULT_DEV;
+static int debug = 0;
+
 static uint32 g_homeId = 0;
 static bool g_initFailed = false;
 
@@ -82,6 +86,13 @@ void OnNotification(Notification const *n, void *ctx)
 {
 	// Must do this inside a critical section to avoid conflicts with the main thread
 	pthread_mutex_lock(&g_criticalSection);
+
+	if (debug > 1) {
+		Notification *nc = new Notification(*n);
+		fprintf(stderr, "DEBUG: %s homeId=0x%08x nodeId=%d\n",
+			nc->GetAsString().c_str(),
+			n->GetHomeId(), n->GetNodeId());
+	}
 
 	switch (n->GetType()) {
 	case Notification::Type_ValueAdded:
@@ -192,11 +203,9 @@ void OnNotification(Notification const *n, void *ctx)
 	pthread_mutex_unlock(&g_criticalSection);
 }
 
-string zwave_port = OZW_DEFAULT_DEV;
-
 void usage(void)
 {
-	fprintf(stderr, "lsozw [-d device]\n");
+	fprintf(stderr, "lsozw [-d] [-p device]\n");
 	exit(1);
 }
 
@@ -204,8 +213,11 @@ void parse_options(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "p:")) != -1) {
+	while ((opt = getopt(argc, argv, "dp:")) != -1) {
 		switch (opt) {
+		case 'd':
+			debug++;
+			break;
 		case 'p':
 			zwave_port = optarg;
 			break;
@@ -261,10 +273,17 @@ int main(int argc, char *argv[])
 		Manager::Get()->AddDriver(zwave_port);
 	}
 
+	if (debug)
+		fprintf(stderr, "Scanning ZWave network... (debug = %d)\n",
+			debug);
+
 	// Now we just wait for either the AwakeNodesQueried or AllNodesQueried notification,
 	// then write out the config file.
 	// In a normal app, we would be handling notifications and building a UI for the user.
 	pthread_cond_wait(&initCond, &initMutex);
+
+	if (debug)
+		fprintf(stderr, "Scan complete.\n");
 
 	// Since the configuration file contains command class information that is only 
 	// known after the nodes on the network are queried, wait until all of the nodes 
