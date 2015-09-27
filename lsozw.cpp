@@ -40,9 +40,6 @@
 
 using namespace OpenZWave;
 
-bool temp = false;
-
-
 static uint32 g_homeId = 0;
 static bool g_initFailed = false;
 
@@ -135,11 +132,6 @@ void OnNotification(Notification const *_notification, void *_context)
 			nodeInfo->m_nodeId = _notification->GetNodeId();
 			nodeInfo->m_polled = false;
 			g_nodes.push_back(nodeInfo);
-			if (temp == true) {
-				Manager::Get()->
-				    CancelControllerCommand(_notification->
-							    GetHomeId());
-			}
 			break;
 		}
 
