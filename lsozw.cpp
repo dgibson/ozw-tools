@@ -268,7 +268,9 @@ int main(int argc, char *argv[])
 	// on the network have been queried (at least the "listening" ones) before
 	// writing the configuration file.  (Maybe write again after sleeping nodes have
 	// been queried as well.)
-	if (!g_initFailed) {
+	if (g_initFailed) {
+		fprintf(stderr, "Initialization failed\n");
+		exit(1);
 	}
 	// program exit (clean up)
 	if (strcasecmp(port.c_str(), "usb") == 0) {
@@ -279,6 +281,17 @@ int main(int argc, char *argv[])
 	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 	Manager::Destroy();
 	Options::Destroy();
+
+	pthread_mutex_lock(&g_criticalSection);
+	for (std::list<NodeInfo *>::const_iterator it = g_nodes.begin();
+	     it != g_nodes.end();
+	     it++) {
+		NodeInfo *ni = *it;
+
+		printf("Home ID 0x%08x, node %d\n", ni->m_homeId, ni->m_nodeId);
+	}
+	pthread_mutex_unlock(&g_criticalSection);
+
 	pthread_mutex_destroy(&g_criticalSection);
 	return 0;
 }
