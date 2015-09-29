@@ -44,7 +44,6 @@ using namespace OpenZWave;
 static string zwave_port = OZW_DEFAULT_DEV;
 static int debug = 0;
 
-static uint32 g_homeId = 0;
 static bool g_initFailed = false;
 
 typedef struct {
@@ -121,17 +120,9 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_ValueChanged:
-		// One of the node values has changed
-		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
-			nodeInfo = nodeInfo;	// placeholder for real action
-		}
 		break;
 
 	case Notification::Type_Group:
-		// One of the node's association groups has changed
-		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
-			nodeInfo = nodeInfo;	// placeholder for real action
-		}
 		break;
 
 	case Notification::Type_NodeAdded:
@@ -163,11 +154,6 @@ void OnNotification(Notification const *n, void *ctx)
 		}
 
 	case Notification::Type_NodeEvent:
-		// We have received an event from the node, caused by a
-		// basic_set or hail message.
-		if (NodeInfo *nodeInfo = GetNodeInfo(n)) {
-			nodeInfo = nodeInfo;	// placeholder for real action
-		}
 		break;
 
 	case Notification::Type_PollingDisabled:
@@ -177,7 +163,6 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_DriverReady:
-		g_homeId = n->GetHomeId();
 		break;
 
 	case Notification::Type_DriverFailed:
