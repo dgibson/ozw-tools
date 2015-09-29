@@ -214,7 +214,18 @@ void parse_options(int argc, char *argv[])
 
 void list_one_node(Manager *mgr, NodeInfo *ni)
 {
-	printf("0x%08x:%d\n", ni->m_homeId, ni->m_nodeId);
+	uint32_t hid = ni->m_homeId;
+	uint8_t nid = ni->m_nodeId;
+	uint8_t controller_nid = mgr->GetControllerNodeId(hid);
+	string node_type = mgr->GetNodeType(hid, nid);
+	string manuf_name = mgr->GetNodeManufacturerName(hid, nid);
+	string prod_name = mgr->GetNodeProductName(hid, nid);
+	string name = mgr->GetNodeName(hid, nid);
+
+	printf("%s%08x:%02x %s: %s %s [%s]\n",
+	       controller_nid == nid ? "*" : " ", hid, nid,
+	       node_type.c_str(), manuf_name.c_str(), prod_name.c_str(),
+	       name.c_str());
 }
 
 //-----------------------------------------------------------------------------
