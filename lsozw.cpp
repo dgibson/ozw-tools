@@ -277,9 +277,9 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Initialization failed\n");
 		exit(1);
 	}
-	// program exit (clean up)
-	Manager::Destroy();
-	Options::Destroy();
+
+	// We don't want any more updates
+	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 
 	pthread_mutex_lock(&g_mutex);
 	for (std::list<NodeInfo *>::const_iterator it = g_nodes.begin();
@@ -289,6 +289,10 @@ int main(int argc, char *argv[])
 	}
 	pthread_mutex_unlock(&g_mutex);
 
+	// program exit (clean up)
+	Manager::Destroy();
+	Options::Destroy();
 	pthread_mutex_destroy(&g_mutex);
+
 	return 0;
 }
