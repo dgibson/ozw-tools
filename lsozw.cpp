@@ -245,8 +245,6 @@ int main(int argc, char *argv[])
 	Options::Create(OZW_CONFIG_DIR, "", "");
 	Options::Get()->AddOptionInt("SaveLogLevel", LogLevel_Detail);
 	Options::Get()->AddOptionInt("QueueLogLevel", LogLevel_Debug);
-	Options::Get()->AddOptionInt("DumpTrigger", LogLevel_Error);
-	Options::Get()->AddOptionBool("ValidateValueChanges", true);
 	Options::Get()->AddOptionBool("ConsoleOutput", false);
 	Options::Get()->Lock();
 
