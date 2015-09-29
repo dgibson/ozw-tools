@@ -54,9 +54,9 @@ typedef struct {
 } NodeInfo;
 
 static list<NodeInfo *> g_nodes;
-static pthread_mutex_t g_criticalSection;
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static pthread_cond_t initCond = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t initMutex = PTHREAD_MUTEX_INITIALIZER;
 
 //-----------------------------------------------------------------------------
 // <GetNodeInfo>
@@ -85,7 +85,7 @@ NodeInfo *GetNodeInfo(Notification const *n)
 void OnNotification(Notification const *n, void *ctx)
 {
 	// Must do this inside a critical section to avoid conflicts with the main thread
-	pthread_mutex_lock(&g_criticalSection);
+	pthread_mutex_lock(&g_mutex);
 
 	if (debug > 1) {
 		Notification *nc = new Notification(*n);
@@ -200,7 +200,7 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 	}
 
-	pthread_mutex_unlock(&g_criticalSection);
+	pthread_mutex_unlock(&g_mutex);
 }
 
 void usage(void)
@@ -238,16 +238,7 @@ void list_one_node(NodeInfo *ni)
 //-----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-	pthread_mutexattr_t mutexattr;
-
 	parse_options(argc, argv);
-
-	pthread_mutexattr_init(&mutexattr);
-	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&g_criticalSection, &mutexattr);
-	pthread_mutexattr_destroy(&mutexattr);
-
-	pthread_mutex_lock(&initMutex);
 
 	// Create the OpenZWave Manager.
 	// The first argument is the path to the config files (where the manufacturer_specific.xml file is located
@@ -285,7 +276,9 @@ int main(int argc, char *argv[])
 	// Now we just wait for either the AwakeNodesQueried or AllNodesQueried notification,
 	// then write out the config file.
 	// In a normal app, we would be handling notifications and building a UI for the user.
-	pthread_cond_wait(&initCond, &initMutex);
+	pthread_mutex_lock(&g_mutex);
+	pthread_cond_wait(&initCond, &g_mutex);
+	pthread_mutex_unlock(&g_mutex);
 
 	if (debug)
 		fprintf(stderr, "Scan complete.\n");
@@ -309,14 +302,14 @@ int main(int argc, char *argv[])
 	Manager::Destroy();
 	Options::Destroy();
 
-	pthread_mutex_lock(&g_criticalSection);
+	pthread_mutex_lock(&g_mutex);
 	for (std::list<NodeInfo *>::const_iterator it = g_nodes.begin();
 	     it != g_nodes.end();
 	     it++) {
 		list_one_node(*it);
 	}
-	pthread_mutex_unlock(&g_criticalSection);
+	pthread_mutex_unlock(&g_mutex);
 
-	pthread_mutex_destroy(&g_criticalSection);
+	pthread_mutex_destroy(&g_mutex);
 	return 0;
 }
