@@ -227,6 +227,11 @@ void parse_options(int argc, char *argv[])
 	}
 }
 
+void list_one_node(NodeInfo *ni)
+{
+	printf("0x%08x:%d\n", ni->m_homeId, ni->m_nodeId);
+}
+
 //-----------------------------------------------------------------------------
 // <main>
 // Create the driver and then wait
@@ -308,9 +313,7 @@ int main(int argc, char *argv[])
 	for (std::list<NodeInfo *>::const_iterator it = g_nodes.begin();
 	     it != g_nodes.end();
 	     it++) {
-		NodeInfo *ni = *it;
-
-		printf("Home ID 0x%08x, node %d\n", ni->m_homeId, ni->m_nodeId);
+		list_one_node(*it);
 	}
 	pthread_mutex_unlock(&g_criticalSection);
 
