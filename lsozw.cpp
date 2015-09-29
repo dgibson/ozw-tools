@@ -212,7 +212,7 @@ void parse_options(int argc, char *argv[])
 	}
 }
 
-void list_one_node(NodeInfo *ni)
+void list_one_node(Manager *mgr, NodeInfo *ni)
 {
 	printf("0x%08x:%d\n", ni->m_homeId, ni->m_nodeId);
 }
@@ -223,6 +223,8 @@ void list_one_node(NodeInfo *ni)
 //-----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
+	Manager *mgr;
+
 	parse_options(argc, argv);
 
 	// Create the OpenZWave Manager.
@@ -238,20 +240,21 @@ int main(int argc, char *argv[])
 	Options::Get()->Lock();
 
 	Manager::Create();
+	mgr = Manager::Get();
 
 	// Add a callback handler to the manager.  The second argument is a context that
 	// is passed to the OnNotification method.  If the OnNotification is a method of
 	// a class, the context would usually be a pointer to that class object, to
 	// avoid the need for the notification handler to be a static.
-	Manager::Get()->AddWatcher(OnNotification, NULL);
+	mgr->AddWatcher(OnNotification, NULL);
 
 	// Add a Z-Wave Driver
 	// Modify this line to set the correct serial port for your PC interface.
 	if (strcasecmp(zwave_port.c_str(), "usb") == 0) {
-		Manager::Get()->AddDriver("HID Controller",
-					  Driver::ControllerInterface_Hid);
+		mgr->AddDriver("HID Controller",
+			       Driver::ControllerInterface_Hid);
 	} else {
-		Manager::Get()->AddDriver(zwave_port);
+		mgr->AddDriver(zwave_port);
 	}
 
 	if (debug)
@@ -279,13 +282,13 @@ int main(int argc, char *argv[])
 	}
 
 	// We don't want any more updates
-	Manager::Get()->RemoveWatcher(OnNotification, NULL);
+	mgr->RemoveWatcher(OnNotification, NULL);
 
 	pthread_mutex_lock(&g_mutex);
 	for (std::list<NodeInfo *>::const_iterator it = g_nodes.begin();
 	     it != g_nodes.end();
 	     it++) {
-		list_one_node(*it);
+		list_one_node(mgr, *it);
 	}
 	pthread_mutex_unlock(&g_mutex);
 
