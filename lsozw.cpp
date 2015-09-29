@@ -293,12 +293,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	// program exit (clean up)
-	if (strcasecmp(zwave_port.c_str(), "usb") == 0) {
-		Manager::Get()->RemoveDriver("HID Controller");
-	} else {
-		Manager::Get()->RemoveDriver(zwave_port);
-	}
-	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 	Manager::Destroy();
 	Options::Destroy();
 
