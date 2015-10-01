@@ -42,6 +42,7 @@ using namespace OpenZWave;
 
 // Global configuration
 static string zwave_port = OZW_DEFAULT_DEV;
+static int verbose = 0;
 static int debug = 0;
 
 static bool g_initFailed = false;
@@ -198,10 +199,13 @@ void parse_options(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "dp:")) != -1) {
+	while ((opt = getopt(argc, argv, "dvp:")) != -1) {
 		switch (opt) {
 		case 'd':
 			debug++;
+			break;
+		case 'v':
+			verbose++;
 			break;
 		case 'p':
 			zwave_port = optarg;
@@ -221,11 +225,28 @@ void list_one_node(Manager *mgr, NodeInfo *ni)
 	string manuf_name = mgr->GetNodeManufacturerName(hid, nid);
 	string prod_name = mgr->GetNodeProductName(hid, nid);
 	string name = mgr->GetNodeName(hid, nid);
+	int ccid;
 
-	printf("%s%08x:%02x %s: %s %s [%s]\n",
+	printf("%s%08x:%02x %s: %s %s",
 	       controller_nid == nid ? "*" : " ", hid, nid,
-	       node_type.c_str(), manuf_name.c_str(), prod_name.c_str(),
-	       name.c_str());
+	       node_type.c_str(), manuf_name.c_str(), prod_name.c_str());
+	if (!name.empty())
+		printf(" [%s]", name.c_str());
+	printf("\n");
+
+	if (verbose < 1)
+		return;
+
+	for (ccid = 0; ccid < 0x100; ccid++) {
+		string cname;
+		uint8_t cver;
+
+		if (!mgr->GetNodeClassInformation(hid, nid, ccid,
+						  &cname, &cver))
+			continue;
+
+		printf("\t%s v%d\n", cname.c_str(), cver);
+	}
 }
 
 //-----------------------------------------------------------------------------
