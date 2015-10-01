@@ -216,6 +216,22 @@ void parse_options(int argc, char *argv[])
 	}
 }
 
+void list_one_value(Manager *mgr, NodeInfo *ni, ValueID vid)
+{
+	string label = mgr->GetValueLabel(vid);
+	string units = mgr->GetValueUnits(vid);
+	string genre = Value::GetGenreNameFromEnum(vid.GetGenre());
+	string type = Value::GetTypeNameFromEnum(vid.GetType());
+	bool ro = mgr->IsValueReadOnly(vid);
+	bool wo = mgr->IsValueWriteOnly(vid);
+
+	printf("\t\t%08llx: %s (%s %s %c%c)", vid.GetId(), label.c_str(),
+	       genre.c_str(), type.c_str(), wo ? '-' : 'R', ro ? '-' : 'W');
+	if (!units.empty())
+		printf(" [%s]", units.c_str());
+	printf("\n");
+}
+
 void list_one_node(Manager *mgr, NodeInfo *ni)
 {
 	uint32_t hid = ni->m_homeId;
@@ -246,6 +262,19 @@ void list_one_node(Manager *mgr, NodeInfo *ni)
 			continue;
 
 		printf("\t%s v%d\n", cname.c_str(), cver);
+
+		if (verbose < 2)
+			continue;
+
+		for (std::list<ValueID>::const_iterator it = ni->m_values.begin();
+		     it != ni->m_values.end(); it++) {
+			ValueID vid = *it;
+
+			if (vid.GetCommandClassId() != ccid)
+				continue;
+
+			list_one_value(mgr, ni, *it);
+		}
 	}
 }
 
