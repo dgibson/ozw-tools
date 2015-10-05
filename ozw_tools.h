@@ -19,16 +19,16 @@
 #ifndef _OZW_TOOLS_H
 #define _OZW_TOOLS_H
 
-#include "Options.h"
-#include "Manager.h"
-#include "Driver.h"
-#include "Node.h"
-#include "Group.h"
-#include "Notification.h"
-#include "value_classes/ValueStore.h"
-#include "value_classes/Value.h"
-#include "value_classes/ValueBool.h"
-#include "platform/Log.h"
+#include <Options.h>
+#include <Manager.h>
+#include <Driver.h>
+#include <Node.h>
+#include <Group.h>
+#include <Notification.h>
+#include <value_classes/ValueStore.h>
+#include <value_classes/Value.h>
+#include <value_classes/ValueBool.h>
+#include <platform/Log.h>
 
 #define OZW_CONFIG_DIR		"/etc/openzwave"
 #define OZW_DEFAULT_DEV		"/dev/zwave"
