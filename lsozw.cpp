@@ -24,16 +24,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "Options.h"
-#include "Manager.h"
-#include "Driver.h"
-#include "Node.h"
-#include "Group.h"
-#include "Notification.h"
-#include "value_classes/ValueStore.h"
-#include "value_classes/Value.h"
-#include "value_classes/ValueBool.h"
-#include "platform/Log.h"
+
+#include "ozw_tools.h"
 
 #define OZW_CONFIG_DIR		"/etc/openzwave"
 #define OZW_DEFAULT_DEV		"/dev/zwave"
@@ -288,33 +280,7 @@ int main(int argc, char *argv[])
 
 	parse_options(argc, argv);
 
-	// Create the OpenZWave Manager.
-	// The first argument is the path to the config files (where the manufacturer_specific.xml file is located
-	// The second argument is the path for saved Z-Wave network state and the log file.  If you leave it NULL 
-	// the log file will appear in the program's working directory.
-	Options::Create(OZW_CONFIG_DIR, "", "");
-	Options::Get()->AddOptionInt("SaveLogLevel", LogLevel_Detail);
-	Options::Get()->AddOptionInt("QueueLogLevel", LogLevel_Debug);
-	Options::Get()->AddOptionBool("ConsoleOutput", false);
-	Options::Get()->Lock();
-
-	Manager::Create();
-	mgr = Manager::Get();
-
-	// Add a callback handler to the manager.  The second argument is a context that
-	// is passed to the OnNotification method.  If the OnNotification is a method of
-	// a class, the context would usually be a pointer to that class object, to
-	// avoid the need for the notification handler to be a static.
-	mgr->AddWatcher(OnNotification, NULL);
-
-	// Add a Z-Wave Driver
-	// Modify this line to set the correct serial port for your PC interface.
-	if (strcasecmp(zwave_port.c_str(), "usb") == 0) {
-		mgr->AddDriver("HID Controller",
-			       Driver::ControllerInterface_Hid);
-	} else {
-		mgr->AddDriver(zwave_port);
-	}
+	mgr = ozw_setup(zwave_port, OnNotification);
 
 	if (debug)
 		fprintf(stderr, "Scanning ZWave network... (debug = %d)\n",
@@ -351,9 +317,8 @@ int main(int argc, char *argv[])
 	}
 	pthread_mutex_unlock(&g_mutex);
 
-	// program exit (clean up)
-	Manager::Destroy();
-	Options::Destroy();
+	ozw_cleanup(mgr);
+
 	pthread_mutex_destroy(&g_mutex);
 
 	return 0;

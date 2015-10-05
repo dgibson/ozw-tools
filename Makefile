@@ -6,6 +6,11 @@ LDLIBS = -lpthread -lopenzwave
 
 all: $(TARGETS)
 
+$(TARGETS): %: %.o ozw_tools.o
+	$(CXX) -o $@ $(LDFLAGS) $(LDLIBS) $^
+
+%.o: %.cpp ozw_tools.h
+
 clean:
 	rm -f *~ *.o a.out
 	rm -f $(TARGETS)
