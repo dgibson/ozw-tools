@@ -222,6 +222,16 @@ void list_one_value(Manager *mgr, NodeInfo *ni, ValueID vid)
 	if (!units.empty())
 		printf(" [%s]", units.c_str());
 	printf("\n");
+
+	if (verbose < 3)
+		return;
+
+	string val;
+
+	if (!mgr->GetValueAsString(vid, &val))
+		printf("\t\t\tERROR reading value\n");
+
+	printf("\t\t\t%s %s\n", val.c_str(), units.c_str());
 }
 
 void list_one_node(Manager *mgr, NodeInfo *ni)
