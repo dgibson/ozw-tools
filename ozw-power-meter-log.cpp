@@ -28,6 +28,8 @@
 
 #include "ozw_tools.h"
 
+#define COMMAND_CLASS_METER	0x32
+
 using namespace OpenZWave;
 
 // Global configuration
@@ -47,6 +49,12 @@ static pthread_cond_t g_cond = PTHREAD_COND_INITIALIZER;
 
 static bool finished = false;
 static bool failed = false;
+
+struct ValueInfo {
+	string name;
+};
+
+static map<ValueID, ValueInfo *> valmap;
 
 static void log(int level, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
@@ -69,6 +77,39 @@ static void log(int level, const char *fmt, ...)
 	pthread_mutex_unlock(&g_mutex);
 }
 
+static ValueInfo *value_info(Manager *mgr, ValueID vid)
+{
+	string label;
+	struct ValueInfo *vinfo;
+
+	if (vid.GetCommandClassId() != COMMAND_CLASS_METER)
+		return NULL;
+
+	label = mgr->GetValueLabel(vid);
+
+	if (label != "Energy" && label != "Power")
+		return NULL;
+
+	vinfo = new ValueInfo;
+	vinfo->name = label;
+	return vinfo;
+}
+
+void value_update(Manager *mgr, ValueID vid, ValueInfo *vinfo)
+{
+	string val, units;
+
+	if (!mgr->GetValueAsString(vid, &val)) {
+		log(LOG_ERROR, "Error retrieving %s", vinfo->name.c_str());
+		return;
+	}
+
+	units = mgr->GetValueUnits(vid);
+	
+	log(LOG_INFO, "%s: %s %s", vinfo->name.c_str(),
+	    val.c_str(), units.c_str());
+}
+
 //-----------------------------------------------------------------------------
 // <OnNotification>
 // Callback that is triggered when a value, group or node changes
@@ -76,37 +117,48 @@ static void log(int level, const char *fmt, ...)
 void OnNotification(Notification const *n, void *ctx)
 {
 	Manager *mgr = Manager::Get();
+	ValueInfo *vinfo;
+	map<ValueID, ValueInfo *>::const_iterator it;
+
 	pthread_mutex_lock(&g_mutex);
-	uint32_t hid;
-	uint8_t nid;
 
 	switch (n->GetType()) {
-	case Notification::Type_ValueAdded:
+	case Notification::Type_ValueRemoved:
+		if (valmap.find(n->GetValueID()) == valmap.end())
+			break;
+
+		log(LOG_INFO, "Removing tracked value 0x%llx",
+		    n->GetValueID().GetId());
+		valmap.erase(n->GetValueID());
 		break;
 
-	case Notification::Type_ValueRemoved:
-		break;
+	case Notification::Type_ValueAdded:
+		vinfo = value_info(mgr, n->GetValueID());
+		if (!vinfo)
+			break;
+
+		log(LOG_DEBUG, "Polling value 0x%llx %s",
+		    n->GetValueID().GetId(), vinfo->name.c_str());
+		valmap.insert(pair<ValueID, ValueInfo*>(n->GetValueID(), vinfo));
+
+		/* FALLTHROUGH */
 
 	case Notification::Type_ValueChanged:
+		it = valmap.find(n->GetValueID());
+		if (it == valmap.end())
+			break;
+
+		vinfo = it->second;
+		value_update(mgr, n->GetValueID(), vinfo);
 		break;
 
 	case Notification::Type_Group:
 		break;
 
 	case Notification::Type_NodeAdded:
-		hid = n->GetHomeId();
-		nid = n->GetNodeId();
-
-		log(LOG_DEBUG, "Node added %08x:%02x: %s",
-		    hid, nid, mgr->GetNodeType(hid, nid).c_str());
-
 		break;
 
 	case Notification::Type_NodeRemoved:
-		hid = n->GetHomeId();
-		nid = n->GetNodeId();
-
-		log(LOG_DEBUG, "Node removed %08x:%02x", hid, nid);
 		break;
 
 	case Notification::Type_NodeEvent:
