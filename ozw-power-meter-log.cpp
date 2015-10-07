@@ -47,6 +47,7 @@ static int loglevel = LOG_DEBUG;
 static pthread_mutex_t g_mutex;
 static pthread_cond_t g_cond = PTHREAD_COND_INITIALIZER;
 
+static bool scanned = false;
 static bool finished = false;
 static bool failed = false;
 
@@ -165,9 +166,13 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_PollingDisabled:
+		log(LOG_INFO, "Polling disabled on %08x:%02x",
+		    n->GetHomeId(), n->GetNodeId());
 		break;
 
 	case Notification::Type_PollingEnabled:
+		log(LOG_INFO, "Polling enabled on %08x:%02x",
+		    n->GetHomeId(), n->GetNodeId());
 		break;
 
 	case Notification::Type_DriverReady:
@@ -182,7 +187,8 @@ void OnNotification(Notification const *n, void *ctx)
 	case Notification::Type_AwakeNodesQueried:
 	case Notification::Type_AllNodesQueried:
 	case Notification::Type_AllNodesQueriedSomeDead:
-		log(LOG_INFO, "Initial Z-Wave scan completed");
+		scanned = true;
+		pthread_cond_broadcast(&g_cond);
 		break;
 
 	case Notification::Type_DriverReset:
@@ -245,6 +251,19 @@ int main(int argc, char *argv[])
 	log(LOG_INFO, "Starting");
 
 	pthread_mutex_lock(&g_mutex);
+	while (!scanned) {
+		pthread_cond_wait(&g_cond, &g_mutex);
+	}
+
+	log(LOG_INFO, "Initial Z-Wave scan completed");
+
+	for (map<ValueID, ValueInfo *>::const_iterator it = valmap.begin();
+	     it != valmap.end(); it++) {
+		ValueID vid = it->first;
+
+		mgr->EnablePoll(vid, 1);
+	}
+
 	while (!finished) {
 		pthread_cond_wait(&g_cond, &g_mutex);
 	}
