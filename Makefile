@@ -1,4 +1,4 @@
-TARGETS = lsozw
+TARGETS = lsozw ozw-power-meter-log
 
 CXXFLAGS = -Wall -g -Wno-unknown-pragmas
 CPPFLAGS = -I/usr/include/openzwave
