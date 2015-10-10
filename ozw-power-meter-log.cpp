@@ -99,15 +99,22 @@ static ValueInfo *value_info(Manager *mgr, ValueID vid)
 void value_update(Manager *mgr, ValueID vid, ValueInfo *vinfo)
 {
 	string val, units;
+	time_t timestamp;
+	const struct tm *tm;
+	char timestring[64];
+
+	units = mgr->GetValueUnits(vid);
 
 	if (!mgr->GetValueAsString(vid, &val)) {
 		log(LOG_ERROR, "Error retrieving %s", vinfo->name.c_str());
 		return;
 	}
 
-	units = mgr->GetValueUnits(vid);
-	
-	log(LOG_INFO, "%s: %s %s", vinfo->name.c_str(),
+	timestamp = time(NULL);	
+	tm = localtime(&timestamp);
+	strftime(timestring, sizeof(timestring), "%c", tm);
+
+	log(LOG_INFO, "%s: %s %s %s", timestring, vinfo->name.c_str(),
 	    val.c_str(), units.c_str());
 }
 
