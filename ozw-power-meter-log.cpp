@@ -135,8 +135,9 @@ void OnNotification(Notification const *n, void *ctx)
 		if (valmap.find(n->GetValueID()) == valmap.end())
 			break;
 
-		log(LOG_INFO, "Removing tracked value 0x%llx",
-		    n->GetValueID().GetId());
+		log(LOG_INFO, "Removing tracked value %s %s",
+		    format_znode(n->GetHomeId(), n->GetNodeId()).c_str(),
+		    format_vid(n->GetValueID()).c_str());
 		valmap.erase(n->GetValueID());
 		break;
 
@@ -145,8 +146,9 @@ void OnNotification(Notification const *n, void *ctx)
 		if (!vinfo)
 			break;
 
-		log(LOG_DEBUG, "Polling value 0x%llx %s",
-		    n->GetValueID().GetId(), vinfo->name.c_str());
+		log(LOG_DEBUG, "Polling value %s %s",
+		    format_znode(n->GetHomeId(), n->GetNodeId()).c_str(),
+		    format_vid(n->GetValueID()).c_str());
 		valmap.insert(pair<ValueID, ValueInfo*>(n->GetValueID(), vinfo));
 
 		/* FALLTHROUGH */
@@ -173,13 +175,13 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_PollingDisabled:
-		log(LOG_INFO, "Polling disabled on %08x:%02x",
-		    n->GetHomeId(), n->GetNodeId());
+		log(LOG_INFO, "Polling disabled on %s",
+		    format_znode(n->GetHomeId(), n->GetNodeId()).c_str());
 		break;
 
 	case Notification::Type_PollingEnabled:
-		log(LOG_INFO, "Polling enabled on %08x:%02x",
-		    n->GetHomeId(), n->GetNodeId());
+		log(LOG_INFO, "Polling enabled on %s",
+		    format_znode(n->GetHomeId(), n->GetNodeId()).c_str());
 		break;
 
 	case Notification::Type_DriverReady:

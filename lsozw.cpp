@@ -81,9 +81,9 @@ void OnNotification(Notification const *n, void *ctx)
 
 	if (debug > 1) {
 		Notification *nc = new Notification(*n);
-		fprintf(stderr, "DEBUG: %s homeId=0x%08x nodeId=%d\n",
-			nc->GetAsString().c_str(),
-			n->GetHomeId(), n->GetNodeId());
+		fprintf(stderr, "DEBUG: %s %s notification\n",
+			format_znode(n->GetHomeId(), n->GetNodeId()).c_str(),
+			nc->GetAsString().c_str());
 	}
 
 	switch (n->GetType()) {
