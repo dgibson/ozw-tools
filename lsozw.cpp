@@ -36,6 +36,7 @@ using namespace OpenZWave;
 static string zwave_port = OZW_DEFAULT_DEV;
 static int verbose = 0;
 static int debug = 0;
+static list<string> nodes_to_list;
 
 static bool g_initFailed = false;
 
@@ -190,8 +191,9 @@ void usage(void)
 void parse_options(int argc, char *argv[])
 {
 	int opt;
+	string s;
 
-	while ((opt = getopt(argc, argv, "dvp:")) != -1) {
+	while ((opt = getopt(argc, argv, "dvp:n:")) != -1) {
 		switch (opt) {
 		case 'd':
 			debug++;
@@ -201,6 +203,12 @@ void parse_options(int argc, char *argv[])
 			break;
 		case 'p':
 			zwave_port = optarg;
+			break;
+		case 'n':
+			s = optarg;
+			if (!parse_znode(s, NULL, NULL))
+				usage();
+			nodes_to_list.push_back(s);
 			break;
 		default:
 			usage();
@@ -245,6 +253,23 @@ void list_one_node(Manager *mgr, NodeInfo *ni)
 	string prod_name = mgr->GetNodeProductName(hid, nid);
 	string name = mgr->GetNodeName(hid, nid);
 	int ccid;
+
+	if (!nodes_to_list.empty()) {
+		list<string>::const_iterator it;
+		for (it = nodes_to_list.begin(); it != nodes_to_list.end(); it++) {
+			uint32_t xhid;
+			uint8_t xnid;
+
+			if (!parse_znode(*it, &xhid, &xnid))
+				assert(0);
+
+			if ((xhid == hid) && (xnid == nid))
+				break;
+		}
+
+		if (it == nodes_to_list.end())
+			return;
+	}
 
 	printf("%s%s %s: %s %s",
 	       controller_nid == nid ? "*" : " ",

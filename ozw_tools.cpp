@@ -92,6 +92,29 @@ string format_znode(uint32_t hid, uint8_t nid)
 	return stringf("%08x:%02x", hid, nid);
 }
 
+bool parse_znode(const string s, uint32_t *hidp, uint8_t *nidp)
+{
+	unsigned long long hid;
+	unsigned long long nid;
+	const char *p = s.c_str();
+	char *ep;
+
+	hid = strtoull(p, &ep, 16);
+	if ((*ep != ':') || (hid & (~0xffffffffULL)))
+		return false;
+
+	nid = strtoull(ep + 1, &ep, 16);
+	if ((*ep != '\0') || (nid & (~0xff)))
+		return false;
+
+	if (hidp)
+		*hidp = hid;
+	if (nidp)
+		*nidp = nid;
+
+	return true;
+}
+
 string format_vid(const ValueID vid)
 {
 	return stringf("%016llx", vid.GetId());

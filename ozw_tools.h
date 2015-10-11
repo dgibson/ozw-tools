@@ -40,6 +40,7 @@ void ozw_cleanup(OpenZWave::Manager *mgr);
 
 std::string stringf(const char *fmt, ...);
 std::string format_znode(uint32_t hid, uint8_t nid);
+bool parse_znode(const std::string s, uint32_t *hidp, uint8_t *nidp);
 std::string format_vid(const OpenZWave::ValueID vid);
 
 #endif /* _OZW_TOOLS_H */
