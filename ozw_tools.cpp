@@ -20,6 +20,7 @@
 // along with this program.  If not, see
 // <http://www.gnu.org/licenses/>.
 //
+#include <stdarg.h>
 #include <assert.h>
 
 #include "ozw_tools.h"
@@ -68,4 +69,25 @@ void ozw_cleanup(Manager *mgr)
 
 	Manager::Destroy();
 	Options::Destroy();
+}
+
+string stringf(const char *fmt, ...)
+{
+	va_list ap;
+	char *tmp;
+
+	va_start(ap, fmt);
+
+	vasprintf(&tmp, fmt, ap);
+	string s = std::string(tmp);
+
+	free(tmp);
+	va_end(ap);
+
+	return s;
+}
+
+string format_znode(uint32_t hid, uint8_t nid)
+{
+	return stringf("%08x:%02x", hid, nid);
 }

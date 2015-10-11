@@ -38,4 +38,7 @@ OpenZWave::Manager *ozw_setup(const std::string port,
 			      void *ctx = NULL);
 void ozw_cleanup(OpenZWave::Manager *mgr);
 
+std::string stringf(const char *fmt, ...);
+std::string format_znode(uint32_t hid, uint8_t nid);
+
 #endif /* _OZW_TOOLS_H */

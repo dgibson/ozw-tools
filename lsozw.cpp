@@ -245,8 +245,9 @@ void list_one_node(Manager *mgr, NodeInfo *ni)
 	string name = mgr->GetNodeName(hid, nid);
 	int ccid;
 
-	printf("%s%08x:%02x %s: %s %s",
-	       controller_nid == nid ? "*" : " ", hid, nid,
+	printf("%s%s %s: %s %s",
+	       controller_nid == nid ? "*" : " ",
+	       format_znode(hid, nid).c_str(),
 	       node_type.c_str(), manuf_name.c_str(), prod_name.c_str());
 	if (!name.empty())
 		printf(" [%s]", name.c_str());
