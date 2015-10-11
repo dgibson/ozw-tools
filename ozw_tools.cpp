@@ -91,3 +91,8 @@ string format_znode(uint32_t hid, uint8_t nid)
 {
 	return stringf("%08x:%02x", hid, nid);
 }
+
+string format_vid(const ValueID vid)
+{
+	return stringf("%016llx", vid.GetId());
+}

@@ -217,7 +217,8 @@ void list_one_value(Manager *mgr, NodeInfo *ni, ValueID vid)
 	bool ro = mgr->IsValueReadOnly(vid);
 	bool wo = mgr->IsValueWriteOnly(vid);
 
-	printf("\t\t%08llx: %s (%s %s %c%c)", vid.GetId(), label.c_str(),
+	printf("\t\t%s: %s (%s %s %c%c)", format_vid(vid).c_str(),
+	       label.c_str(),
 	       genre.c_str(), type.c_str(), wo ? '-' : 'R', ro ? '-' : 'W');
 	if (!units.empty())
 		printf(" [%s]", units.c_str());
