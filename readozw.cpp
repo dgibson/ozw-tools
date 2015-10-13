@@ -223,7 +223,11 @@ static void read_value(Manager *mgr)
 		return;
 	}
 
-	printf("%s\t%s %s\n", label.c_str(), value.c_str(), units.c_str());
+	if (verbose)
+		printf("%s\t%s %s\n", label.c_str(), value.c_str(),
+		       units.c_str());
+	else
+		printf("%s\n", value.c_str());
 }
 
 //-----------------------------------------------------------------------------
