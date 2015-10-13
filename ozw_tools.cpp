@@ -123,3 +123,33 @@ string format_vid(const ValueID vid)
 
 	return stringf("%u,0x%x,%u", instance, ccid, index);
 }
+
+bool parse_vid(const string s,
+	       uint8_t *instancep, uint8_t *ccidp, uint8_t *indexp)
+{
+	unsigned long long instance, ccid, index;
+	const char *p = s.c_str();
+	char *ep;
+
+	instance = strtoull(p, &ep, 0);
+	if ((*ep != ',') || (instance & (~0xffULL)))
+		return false;
+
+	ccid = strtoull(ep + 1, &ep, 0);
+	if ((*ep != ',') || (ccid & (~0xffULL)))
+		return false;
+
+	index = strtoull(ep + 1, &ep, 0);
+	if ((*ep != '\0') || (index & (~0xffULL)))
+		return false;
+
+	if (instancep)
+		*instancep = instance;
+	if (ccidp)
+		*ccidp = ccid;
+	if (indexp)
+		*indexp = index;
+
+	return true;
+	
+}
