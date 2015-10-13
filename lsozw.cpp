@@ -225,11 +225,15 @@ void list_one_value(Manager *mgr, NodeInfo *ni, ValueID vid)
 	bool ro = mgr->IsValueReadOnly(vid);
 	bool wo = mgr->IsValueWriteOnly(vid);
 
-	printf("\t\t%s: %s (%s %s %c%c)", format_vid(vid).c_str(),
-	       label.c_str(),
-	       genre.c_str(), type.c_str(), wo ? '-' : 'R', ro ? '-' : 'W');
+	printf("\t\t%-10s  %c%c %6s %-7s\t%s",
+	       format_vid(vid).c_str(),
+	       wo ? '-' : 'R', ro ? '-' : 'W',
+	       genre.c_str(), type.c_str(),
+	       label.c_str());
+
 	if (!units.empty())
 		printf(" [%s]", units.c_str());
+
 	printf("\n");
 
 	if (verbose < 3)
@@ -290,7 +294,7 @@ void list_one_node(Manager *mgr, NodeInfo *ni)
 						  &cname, &cver))
 			continue;
 
-		printf("\t%s v%d\n", cname.c_str(), cver);
+		printf("\t%s (v%d)\n", cname.c_str(), cver);
 
 		if (verbose < 2)
 			continue;

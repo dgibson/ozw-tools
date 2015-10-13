@@ -117,5 +117,9 @@ bool parse_znode(const string s, uint32_t *hidp, uint8_t *nidp)
 
 string format_vid(const ValueID vid)
 {
-	return stringf("%016llx", vid.GetId());
+	uint8_t instance = vid.GetInstance();
+	uint8_t ccid = vid.GetCommandClassId();
+	uint8_t index = vid.GetIndex();
+
+	return stringf("%u,0x%x,%u", instance, ccid, index);
 }
