@@ -36,7 +36,7 @@ Manager *ozw_setup(const string port,
 	// The first argument is the path to the config files (where the manufacturer_specific.xml file is located
 	// The second argument is the path for saved Z-Wave network state and the log file.  If you leave it NULL 
 	// the log file will appear in the program's working directory.
-	Options::Create(OZW_CONFIG_DIR, "", "");
+	Options::Create(OZW_CONFIG_DIR, OZW_CACHE_DIR, "");
 	Options::Get()->AddOptionInt("SaveLogLevel", LogLevel_Detail);
 	Options::Get()->AddOptionInt("QueueLogLevel", LogLevel_Debug);
 	Options::Get()->AddOptionBool("ConsoleOutput", false);

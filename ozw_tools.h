@@ -31,6 +31,7 @@
 #include <platform/Log.h>
 
 #define OZW_CONFIG_DIR		"/etc/openzwave"
+#define OZW_CACHE_DIR		"/var/cache/ozw-tools"
 #define OZW_DEFAULT_DEV		"/dev/zwave"
 
 OpenZWave::Manager *ozw_setup(const std::string port,
