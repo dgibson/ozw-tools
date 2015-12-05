@@ -46,4 +46,18 @@ std::string format_vid(const OpenZWave::ValueID vid);
 bool parse_vid(const std::string s,
 	       uint8_t *instancep, uint8_t *ccidp, uint8_t *indexp);
 
+class ValueMatcher {
+private:
+	bool ok;
+	uint32_t hid;
+	uint8_t nid;
+	uint8_t instance;
+	uint8_t ccid;
+	uint8_t index;
+public:
+	ValueMatcher(std::string nstr, std::string vstr);
+	bool valid(void);
+	bool matches(OpenZWave::Notification const *n);
+};
+
 #endif /* _OZW_TOOLS_H */

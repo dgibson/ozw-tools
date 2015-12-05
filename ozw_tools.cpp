@@ -153,3 +153,31 @@ bool parse_vid(const string s,
 	return true;
 	
 }
+
+ValueMatcher::ValueMatcher(string nstr, string vstr)
+{
+	ok = true;
+
+	if (!parse_znode(nstr, &hid, &nid))
+		ok = false;
+
+	if (!parse_vid(vstr, &instance, &ccid, &index))
+		ok = false;
+}
+
+bool ValueMatcher::valid(void)
+{
+	return ok;
+}
+
+bool ValueMatcher::matches(OpenZWave::Notification const *n)
+{
+	if ((n->GetHomeId() == hid) && (n->GetNodeId() == nid)
+	    && (n->GetValueID().GetInstance() == instance)
+	    && (n->GetValueID().GetCommandClassId() == ccid)
+	    && (n->GetValueID().GetIndex() == index)) {
+		return true;
+	}
+
+	return false;
+}

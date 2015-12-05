@@ -36,11 +36,7 @@ using namespace OpenZWave;
 static string zwave_port = OZW_DEFAULT_DEV;
 static int verbose = 0;
 static int debug = 0;
-static uint32_t read_hid;
-static uint8_t read_nid;
-static uint8_t read_instance;
-static uint8_t read_ccid;
-static uint8_t read_index;
+static ValueMatcher *read_matcher;
 
 // Global state
 static pthread_mutex_t g_mutex;
@@ -99,8 +95,6 @@ static void error(const char *fmt, ...)
 //-----------------------------------------------------------------------------
 void OnNotification(Notification const *n, void *ctx)
 {
-	uint8_t instance, ccid, index;
-
 	pthread_mutex_lock(&g_mutex);
 
 	switch (n->GetType()) {
@@ -112,15 +106,7 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_ValueAdded:
-		instance = n->GetValueID().GetInstance();
-		ccid = n->GetValueID().GetCommandClassId();
-		index = n->GetValueID().GetIndex();
-
-		if ((n->GetHomeId() == read_hid)
-		    && (n->GetNodeId() == read_nid)
-		    && (instance == read_instance)
-		    && (ccid == read_ccid)
-		    && (index == read_index)) {
+		if (read_matcher->matches(n)) {
 			pr_debug(1, "ValueID 0x%llx\n", n->GetValueID().GetId());
 			read_vid = new ValueID(n->GetValueID());
 		}
@@ -202,11 +188,8 @@ void parse_options(int argc, char *argv[])
 	if (argc != optind + 2)
 		usage();
 
-	if (!parse_znode(argv[optind], &read_hid, &read_nid))
-		usage();
-
-	if (!parse_vid(argv[optind + 1], &read_instance,
-		       &read_ccid, &read_index))
+	read_matcher = new ValueMatcher(argv[optind], argv[optind + 1]);
+	if (!read_matcher->valid())
 		usage();	
 }
 
