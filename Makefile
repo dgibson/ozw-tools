@@ -1,4 +1,4 @@
-TARGETS = lsozw readozw
+TARGETS = lsozw readozw pollozw
 
 CXXFLAGS = -Wall -g -Wno-unknown-pragmas
 CPPFLAGS = -I/usr/include/openzwave
