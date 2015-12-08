@@ -39,6 +39,8 @@ static int verbose = 0;
 static int debug = 0;
 static unsigned long interval = DEFAULT_INTERVAL;
 static list<ValueMatcher *> matchlist;
+static string time_fmt = "%c";
+static bool use_utc = false;
 
 // Global state
 static pthread_mutex_t g_mutex;
@@ -96,6 +98,9 @@ static void error(const char *fmt, ...)
 
 static void print_value(Manager *mgr, ValueID vid)
 {
+	time_t now;
+	struct tm *now_tm;
+	char timestr[128];
 	string label = mgr->GetValueLabel(vid);
 	string units = mgr->GetValueUnits(vid);
 	string value;
@@ -105,11 +110,18 @@ static void print_value(Manager *mgr, ValueID vid)
 		return;
 	}
 
-	if (verbose)
-		printf("%s\t%s %s\n", label.c_str(), value.c_str(),
-		       units.c_str());
+	now = time(NULL);
+	if (use_utc)
+		now_tm = gmtime(&now);
 	else
-		printf("%s\n", value.c_str());
+		now_tm = localtime(&now);
+	strftime(timestr, sizeof(timestr), time_fmt.c_str(), now_tm);
+
+	if (verbose)
+		printf("%s\t%s\t%s %s\n", timestr, label.c_str(),
+		       value.c_str(), units.c_str());
+	else
+		printf("%s\t%s\n", timestr, value.c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -192,7 +204,8 @@ void OnNotification(Notification const *n, void *ctx)
 void usage(void)
 {
 	fprintf(stderr,
-		"pollozw [-p port] {<home-id>:<node-id> <instance>,<command class>,<index>}...\n");
+		"pollozw [-p port] [-i interval] [-f time format] [-u]\n"
+		"        {<home-id>:<node-id> <instance>,<command class>,<index>}...\n");
 	exit(1);
 }
 
@@ -202,7 +215,7 @@ void parse_options(int argc, char *argv[])
 	int opt;
 	int i;
 
-	while ((opt = getopt(argc, argv, "dvp:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "dvp:i:f:u")) != -1) {
 		switch (opt) {
 		case 'd':
 			debug++;
@@ -217,6 +230,12 @@ void parse_options(int argc, char *argv[])
 			interval = strtoul(optarg, &ep, 0);
 			if (*ep)
 				usage();
+			break;
+		case 'f':
+			time_fmt = optarg;
+			break;
+		case 'u':
+			use_utc = true;
 			break;
 		default:
 			usage();
