@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include "ozw_tools.h"
 
@@ -135,6 +136,9 @@ void OnNotification(Notification const *n, void *ctx)
 		break;
 
 	case Notification::Type_ValueChanged:
+		if (!scanned)
+			/* only start polling once we've completed the scan */
+			break;
 		if (vidmap.count(n->GetValueID()))
 			print_value(mgr, n->GetValueID());
 		break;
@@ -252,10 +256,21 @@ int main(int argc, char *argv[])
 		pthread_cond_wait(&g_cond, &g_mutex);
 	}
 
-	if (!failed)
+	if (!failed) {
 		pr_debug(1, "Z-Wave scan completed\n");
 
-	pr_debug(1, "Polling at %lus inteval\n", interval);
+		pr_debug(1, "Poll interval %lus\n", interval);
+		mgr->SetPollInterval(interval * 1000, false);
+
+		for (map<ValueID, ValueInfo *>::iterator it = vidmap.begin();
+		     it != vidmap.end(); it++) {
+			mgr->EnablePoll(it->first);
+		}
+
+		while (!failed) {
+			pthread_cond_wait(&g_cond, &g_mutex);
+		}
+	}
 
 	pthread_mutex_unlock(&g_mutex);
 
